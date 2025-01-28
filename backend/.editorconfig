@@ -1,0 +1,25 @@
+# http://editorconfig.org
+
+root = true
+
+[*]
+# Estilo de indentación
+indent_style = space
+
+# Tamaño de la indentación en caracteres de un solo espacio
+indent_size = 2
+
+# Carácter(es) en nueva línea para utilizar (varía según OS)
+end_of_line = lf
+
+# Codificación de caracteres de archivo
+charset = utf-8
+
+# Recortar espacios en blanco al final de las líneas
+trim_trailing_whitespace = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+# Agregar una línea en blanco al final del archivo
+insert_final_newline = true

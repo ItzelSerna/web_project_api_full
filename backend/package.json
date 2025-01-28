@@ -1,0 +1,36 @@
+{
+  "name": "web_project_around_express",
+  "version": "1.0.0",
+  "description": "\"Proyecto Express\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npx eslint . --fix",
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ItzelSerna/web_project_around_express.git"
+  },
+  "keywords": [
+    "express",
+    "nodejs"
+  ],
+  "author": "Itzel Serna",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ItzelSerna/web_project_around_express/issues"
+  },
+  "homepage": "https://github.com/ItzelSerna/web_project_around_express#readme",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "eslint-config-airbnb-base": "^15.0.0",
+    "eslint-plugin-import": "^2.31.0",
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  }
+}
