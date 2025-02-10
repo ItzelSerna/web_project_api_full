@@ -1,44 +1,63 @@
 const Card = require('../models/card');
+const { ObjectId } = require('mongoose').Types;
 
-const getCards = (req, res) => {
+const getCards = (req, res, next) => {
   Card.find({})
     .orFail(() => {
       const error = new Error('No se encontraron tarjetas');
       error.statusCode = 404;
       throw error;
     })
-    .then((cards) => res.status(200).json(cards))
+    .then((cards) => {
+      res.status(200).json(cards);
+    })
     .catch((err) => {
-      if (err.statusCode === 404) {
-        return res.status(404).json({ message: err.message });
+      if (err.name === 'CastError') {
+        err.statusCode = 400;
       }
-      res.status(500).json({ message: 'Error al obtener las tarjetas', error: err.message });
+      next(err);
     });
 };
 
-const createCard = (req, res) => {
+const createCard = (req, res, next) => {
   const { name, link } = req.body;
   const owner = req.user._id;
 
   Card.create({ name, link, owner })
-    .then((card) => res.status(201).json(card))
-    .catch((err) => res.status(400).json({ message: 'Error al crear la tarjeta', error: err.message }));
+    .then((card) => {
+      res.status(201).json(card);
+    })
+    .catch((err) => {
+      if (err.name === 'ValidationError') {
+        err.statusCode = 400;
+      }
+      next(err);
+    });
 };
 
-const deleteCard = (req, res) => {
+const deleteCard = (req, res, next) => {
   const { cardId } = req.params;
+  console.log("🔍 Intentando eliminar tarjeta con ID:", cardId);
 
-  Card.findByIdAndRemove(cardId)
+  Card.findById(cardId)
     .then((card) => {
       if (!card) {
-        return res.status(404).json({ message: 'Tarjeta no encontrada' });
+        return res.status(404).json({ message: "Tarjeta no encontrada" });
       }
-      return res.status(200).json({ message: 'Tarjeta eliminada con éxito' });
+      if (card.owner.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ message: "No tienes permisos para borrar esta tarjeta" });
+      }
+      return Card.findByIdAndDelete(cardId)
+        .then(() => {
+          res.status(200).json({ message: "Tarjeta eliminada con éxito" });
+        });
     })
-    .catch((err) => res.status(500).json({ message: 'Error al eliminar la tarjeta', error: err.message }));
+    .catch((err) => {
+      res.status(500).json({ message: "Ocurrió un error inesperado" });
+    });
 };
 
-const likeCard = (req, res) => {
+const likeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $addToSet: { likes: req.user._id } },
@@ -46,14 +65,22 @@ const likeCard = (req, res) => {
   )
     .then((updatedCard) => {
       if (!updatedCard) {
-        return res.status(404).json({ message: 'Tarjeta no encontrada' });
+        const error = new Error('Tarjeta no encontrada');
+        error.statusCode = 404;
+        throw error;
       }
       res.status(200).json(updatedCard);
     })
-    .catch((err) => res.status(400).json({ message: 'Error al dar like', error: err.message }));
+    .catch((err) => {
+      console.error('Error en deleteCard:', err);
+      if (err.name === 'CastError') {
+        err.statusCode = 400;
+      }
+      next(err);
+    });
 };
 
-const dislikeCard = (req, res) => {
+const dislikeCard = (req, res, next) => {
   Card.findByIdAndUpdate(
     req.params.cardId,
     { $pull: { likes: req.user._id } },
@@ -61,11 +88,24 @@ const dislikeCard = (req, res) => {
   )
     .then((updatedCard) => {
       if (!updatedCard) {
-        return res.status(404).json({ message: 'Tarjeta no encontrada' });
+        const error = new Error('Tarjeta no encontrada');
+        error.statusCode = 404;
+        throw error;
       }
       res.status(200).json(updatedCard);
     })
-    .catch((err) => res.status(400).json({ message: 'Error al dar unlike', error: err.message }));
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        err.statusCode = 400;
+      }
+      next(err);
+    });
 };
 
-module.exports = { getCards, createCard, deleteCard, likeCard, dislikeCard };
+module.exports = {
+  getCards,
+  createCard,
+  deleteCard,
+  likeCard,
+  dislikeCard,
+};

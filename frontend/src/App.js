@@ -28,27 +28,33 @@ function App() {
     avatar: "",
     userId: "",
     _id: "",
-    email: "", 
+    email: "",
   });
-  
+
   const [cards, setCards] = useState([]);
   const [deletedCard, setDeletedCard] = useState(null);
+
+  const [token, setToken] = useState(localStorage.getItem("jwt") || "");
+
   const [loggedIn, setLoggedIn] = useState(false);
-  const [infoTooltip, setInfoTooltip] = useState({ isOpen: false, message: "", type: "" });
+  const [infoTooltip, setInfoTooltip] = useState({
+    isOpen: false,
+    message: "",
+    type: "",
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("jwt");
     if (token) {
-      auth.checkToken(token)
+      auth
+        .checkToken(token)
         .then((res) => {
-          const { email, _id } = res.data 
-            ? res.data 
-            : res; 
+          const { email, _id } = res.data ? res.data : res;
           setCurrentUser((prev) => ({
             ...prev,
             email: email,
-            _id: _id
+            _id: _id,
           }));
           setLoggedIn(true);
         })
@@ -57,11 +63,12 @@ function App() {
           setLoggedIn(false);
         });
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     if (loggedIn) {
-      api.getUserInfo()
+      api
+        .getUserInfo()
         .then((info) => {
           setCurrentUser((prev) => ({
             ...prev,
@@ -70,7 +77,6 @@ function App() {
             avatar: info.avatar,
             userId: info._id,
             _id: info._id,
-            // Retengo el prev.email
             email: prev.email,
           }));
         })
@@ -87,7 +93,6 @@ function App() {
             owner:
               typeof card.owner === "string" ? { _id: card.owner } : card.owner,
           }));
-          console.log("Tarjetas normalizadas:", normalizedCards);
           setCards(normalizedCards);
         })
         .catch((err) => console.error(`Error al obtener las tarjetas: ${err}`));
@@ -134,7 +139,6 @@ function App() {
   };
 
   const handleCardClick = (card) => {
-    console.log("Tarjeta seleccionada:", card);
     setSelectedCard(card);
   };
 
@@ -170,13 +174,24 @@ function App() {
 
   const handleCardDelete = async () => {
     try {
+      console.log("Intentando eliminar la tarjeta con ID:", deletedCard);
+  
+      if (!deletedCard || !deletedCard._id) {
+        console.error("Error: No hay una tarjeta seleccionada para eliminar.");
+        return;
+      }
+  
       await api.deleteCard(deletedCard._id);
-      setCards((prevCards) => prevCards.filter((c) => c._id !== deletedCard._id));
+  
+      setCards((prevCards) =>
+        prevCards.filter((c) => c._id !== deletedCard._id)
+      );
+  
       closeAllPopups();
     } catch (err) {
-      console.error(err);
+      console.error("Error al eliminar la tarjeta:", err);
     }
-  };
+  };  
 
   function handleLogin(email, password) {
     auth
@@ -184,8 +199,11 @@ function App() {
       .then((data) => {
         console.log("Respuesta de login:", data);
         localStorage.setItem("jwt", data.token);
+        setToken(data.token); 
         setLoggedIn(true);
-        navigate("/");
+        
+        const redirectTo = data.redirectUrl || "/";
+        navigate(redirectTo);
       })
       .catch((err) => {
         console.error(err);
@@ -196,7 +214,7 @@ function App() {
         });
       });
   }
-
+  
   const handleRegister = (email, password) => {
     auth
       .register(email, password)
@@ -218,17 +236,14 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem("jwt");
+    setToken("");       
     setLoggedIn(false);
     setCurrentUser((prev) => ({ ...prev, email: "" }));
   };
 
   return (
     <CurrentUserContext.Provider value={currentUser}>
-      <Header 
-        loggedIn={loggedIn} 
-        email={currentUser.email} 
-        onLogout={handleLogout} 
-      />
+      <Header loggedIn={loggedIn} email={currentUser.email} onLogout={handleLogout} />
       <Routes>
         <Route path="/signin" element={<Login onLogin={handleLogin} />} />
         <Route path="/signup" element={<Register onRegister={handleRegister} />} />
@@ -252,10 +267,7 @@ function App() {
             />
           }
         />
-        <Route
-          path="*"
-          element={<Navigate to={loggedIn ? "/" : "/signin"} />}
-        />
+        <Route path="*" element={<Navigate to={loggedIn ? "/" : "/signin"} />} />
       </Routes>
 
       <Footer />

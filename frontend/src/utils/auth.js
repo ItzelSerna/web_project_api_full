@@ -1,18 +1,18 @@
-const BASE_URL = 'https://se-register-api.en.tripleten-services.com/v1';
+const BASE_URL = process.env.REACT_APP_API_URL || "https://api.itzelSerna.lat";
 
 export const register = (email, password) => {
-    return fetch(`${BASE_URL}/signup`, {
-        method:'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-    }).then((res) => {
-        if (!res.ok){
-            return Promise.reject(`Error en /signup: ${res.status}`);
-        }
-       return  res.json();
-    });
+  return fetch(`${BASE_URL}/signup`, {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+  }).then((res) => {
+      if (!res.ok) {
+          return Promise.reject(`Error en /signup: ${res.status}`);
+      }
+      return res.json();
+  });
 };
 
 export const authorize = (email, password) => {
