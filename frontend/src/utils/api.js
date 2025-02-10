@@ -100,7 +100,7 @@ const api = {
       },
       body: JSON.stringify(userData),
     }).then(checkResponse);
-  },  
+  },
 
   addCard({ name, link }) {
     return fetch(`${BASE_URL}/cards`, {

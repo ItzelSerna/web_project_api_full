@@ -16,35 +16,28 @@ const { validateCreateUser, validateLogin } = require("./middlewares/validation"
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-if (process.env.NODE_ENV !== "production") {
-  process.env.JWT_SECRET = "clave-secreta-desarrollo"; // Fallback para desarrollo
-  console.log("⚠️ Ejecutando en modo desarrollo sin .env");
-}
-
 // Configurar CORS dinámicamente usando `CLIENT_URL` desde `.env`
 const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:3000",
+  "http://localhost:3000",
   "http://localhost:3001",
   "https://itzelserna.lat",
   "https://www.itzelserna.lat",
-  "https://api.itzelserna.lat",
-  "https://front-end.itzelserna.lat",
+  "https://api.itzelserna.lat"
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      // Permite solicitudes desde orígenes explícitos o sin origen (Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
+        console.error(`CORS bloqueó una solicitud desde: ${origin}`);
         callback(new Error("No permitido por CORS"));
       }
     },
-    credentials: true, // Si manejas cookies o autenticación basada en sesión
+    credentials: true, // Permite cookies y encabezados con credenciales
   })
 );
-
 
 app.use(express.json());
 app.use(logRequestMiddleware);
@@ -59,12 +52,11 @@ mongoose
     process.exit(1);
   });
 
-// Verificar `CLIENT_URL` en la consola
 console.log("Frontend permitido en:", process.env.CLIENT_URL);
 
 // Rutas públicas
 app.post("/signup", validateCreateUser, createUser);
-app.post("/signin", validateLogin, login); // Usamos el controlador login de users.js
+app.post("/signin", validateLogin, login);
 
 // Middleware de autenticación para proteger rutas privadas
 app.use(auth);
@@ -82,5 +74,5 @@ app.use(errorHandler);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  console.log(`Servidor corriendo en https://api.itzelserna.lat o en el puerto ${PORT}`);
 });
