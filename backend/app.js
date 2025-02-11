@@ -1,5 +1,3 @@
-console.log("CLIENT_URL en producción:", process.env.CLIENT_URL);
-
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -25,30 +23,22 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 // Configurar CORS dinámicamente usando CLIENT_URL desde .env
-const allowedOrigins = [
-  process.env.CLIENT_URL || "http://localhost:3000",
-  "http://localhost:3001",
-  "https://itzelserna.lat",
-  "https://www.itzelserna.lat",
-  "https://api.itzelserna.lat",
-  "https://front-end.itzelserna.lat",
-];
+const allowedOrigins = {
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+     process.env.CLIENT_URL,
+    'https://itzelserna.lat',
+    'https://www.itzelserna.lat',
+    'https://api.itzelserna.lat',
+    'https://front-end.itzelserna.lat'
+  ],
+  credentials: true
+};
 
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      // Permite solicitudes desde orígenes explícitos o sin origen (por ejemplo, Postman)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("No permitido por CORS"));
-      }
-    },
-    credentials: true, // Para manejo de cookies o autenticación basada en sesión
-  })
-);
+app.use(cors(allowedOrigins));
+app.options('*', cors(allowedOrigins));
 
-app.options("*", cors());
 app.use(express.json());
 app.use(logRequestMiddleware);
 
