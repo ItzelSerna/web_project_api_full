@@ -1,3 +1,5 @@
+console.log("CLIENT_URL en producción:", process.env.CLIENT_URL);
+
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
@@ -15,30 +17,38 @@ const { validateCreateUser, validateLogin } = require("./middlewares/validation"
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+console.log("Valor de PORT:", process.env.PORT, "y PORT usado:", PORT);
 
-// Configurar CORS dinámicamente usando `CLIENT_URL` desde `.env`
+if (process.env.NODE_ENV !== "production") {
+  process.env.JWT_SECRET = "clave-secreta-desarrollo"; // Fallback para desarrollo
+  console.log("⚠️ Ejecutando en modo desarrollo sin .env");
+}
+
+// Configurar CORS dinámicamente usando CLIENT_URL desde .env
 const allowedOrigins = [
-  "http://localhost:3000",
+  process.env.CLIENT_URL || "http://localhost:3000",
   "http://localhost:3001",
   "https://itzelserna.lat",
   "https://www.itzelserna.lat",
-  "https://api.itzelserna.lat"
+  "https://api.itzelserna.lat",
+  "https://front-end.itzelserna.lat",
 ];
 
 app.use(
   cors({
     origin: function (origin, callback) {
+      // Permite solicitudes desde orígenes explícitos o sin origen (por ejemplo, Postman)
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
-        console.error(`CORS bloqueó una solicitud desde: ${origin}`);
         callback(new Error("No permitido por CORS"));
       }
     },
-    credentials: true, // Permite cookies y encabezados con credenciales
+    credentials: true, // Para manejo de cookies o autenticación basada en sesión
   })
 );
 
+app.options("*", cors());
 app.use(express.json());
 app.use(logRequestMiddleware);
 
@@ -52,6 +62,7 @@ mongoose
     process.exit(1);
   });
 
+// Mostrar en consola el CLIENT_URL
 console.log("Frontend permitido en:", process.env.CLIENT_URL);
 
 // Rutas públicas
@@ -72,7 +83,24 @@ app.use((req, res) => {
 app.use(logErrorMiddleware);
 app.use(errorHandler);
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en https://api.itzelserna.lat o en el puerto ${PORT}`);
+// Iniciar el servidor (única llamada a app.listen)
+const server = app.listen(PORT, () => {
+  console.log(`Servidor corriendo en el puerto ${PORT}`);
+});
+
+// Manejo ordenado de señales para cerrar el servidor
+process.on("SIGTERM", () => {
+  console.log("SIGTERM recibido. Cerrando servidor...");
+  server.close(() => {
+    console.log("Servidor cerrado.");
+    process.exit(0);
+  });
+});
+
+process.on("SIGINT", () => {
+  console.log("SIGINT recibido. Cerrando servidor...");
+  server.close(() => {
+    console.log("Servidor cerrado.");
+    process.exit(0);
+  });
 });
