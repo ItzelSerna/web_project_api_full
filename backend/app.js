@@ -36,8 +36,8 @@ const allowedOrigins = {
   credentials: true
 };
 
-app.use(cors(allowedOrigins));
-app.options('*', cors(allowedOrigins));
+app.use(cors());
+app.options('*', cors());
 
 app.use(express.json());
 app.use(logRequestMiddleware);
