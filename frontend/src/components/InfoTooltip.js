@@ -3,7 +3,6 @@ import successIcon from '../images/tooltipSuccess.png';
 import failIcon from '../images/tooltipFail.png';
 
 function InfoTooltip({ isOpen, onClose, type }) {
-    // Define el mensaje dependiendo del tipo de icono
     const message =
         type === 'success'
             ? '¡Correcto! Ya estás registrado.'

@@ -17,8 +17,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "deploy": "npm run build && scp -r -i path/to/ssh/key ./build/* itzel.c.serna.g19@itzelserna.lat:/home/itzel.c.serna.g19/frontend" 
   },
   "eslintConfig": {
     "extends": [

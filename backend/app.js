@@ -18,11 +18,10 @@ const PORT = process.env.PORT || 3001;
 console.log("Valor de PORT:", process.env.PORT, "y PORT usado:", PORT);
 
 if (process.env.NODE_ENV !== "production") {
-  process.env.JWT_SECRET = "clave-secreta-desarrollo"; // Fallback para desarrollo
+  process.env.JWT_SECRET = "clave-secreta-desarrollo";
   console.log("⚠️ Ejecutando en modo desarrollo sin .env");
 }
 
-// Configurar CORS dinámicamente usando CLIENT_URL desde .env
 const allowedOrigins = {
   origin: [
     'http://localhost:3000',
@@ -42,7 +41,6 @@ app.options('*', cors());
 app.use(express.json());
 app.use(logRequestMiddleware);
 
-// Conexión a MongoDB
 const mongoUri = process.env.MONGO_URI || "mongodb://localhost:27017/aroundb";
 mongoose
   .connect(mongoUri)
@@ -52,33 +50,26 @@ mongoose
     process.exit(1);
   });
 
-// Mostrar en consola el CLIENT_URL
 console.log("Frontend permitido en:", process.env.CLIENT_URL);
 
-// Rutas públicas
 app.post("/signup", validateCreateUser, createUser);
 app.post("/signin", validateLogin, login);
 
-// Middleware de autenticación para proteger rutas privadas
 app.use(auth);
 app.use("/users", usersRoutes);
 app.use("/cards", cardsRoutes);
 
-// Manejo de errores 404
 app.use((req, res) => {
   res.status(404).json({ message: "Recurso solicitado no encontrado" });
 });
 
-// Middlewares de errores
 app.use(logErrorMiddleware);
 app.use(errorHandler);
 
-// Iniciar el servidor (única llamada a app.listen)
 const server = app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}`);
 });
 
-// Manejo ordenado de señales para cerrar el servidor
 process.on("SIGTERM", () => {
   console.log("SIGTERM recibido. Cerrando servidor...");
   server.close(() => {
